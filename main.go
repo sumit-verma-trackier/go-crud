@@ -10,15 +10,15 @@ import (
 )
 
 type Todo struct {
-	ID     int
-	Name   string
-	Task   string
-	Status *Status
+	ID     int     `json:"id"`
+	Name   string  `json:"name"`
+	Task   string  `json:"task"`
+	Status *Status `json:"status"`
 }
 
 type Status struct {
-	Completed bool
-	Pending   bool
+	Completed bool `json:"completed"`
+	Pending   bool `json:"pending"`
 }
 
 // using memory for learing
@@ -73,13 +73,8 @@ func main() {
 			return
 		}
 
-		// Creating own response type
-		response := map[string]any{
-			"status":   true,
-			"response": todos,
-		}
-
-		if err := json.NewEncoder(w).Encode(response); err != nil {
+		err := json.NewEncoder(w).Encode(map[string]any{"status": true, "response": todos})
+		if err != nil {
 			http.Error(w, "error encoding todos", http.StatusInternalServerError)
 			return
 		}
@@ -95,7 +90,6 @@ func main() {
 
 		// Convert id string to int
 		id, err := strconv.Atoi(idStr)
-
 		if err != nil {
 			http.Error(w, "Invalid ID", http.StatusBadRequest)
 			return
@@ -103,11 +97,10 @@ func main() {
 
 		for _, todo := range todos {
 			if todo.ID == id {
-				response := map[string]any{
+				json.NewEncoder(w).Encode(map[string]any{
 					"status":   true,
 					"response": todo,
-				}
-				json.NewEncoder(w).Encode(response)
+				})
 				return
 			}
 		}
@@ -132,8 +125,8 @@ func main() {
 		params := mux.Vars(r)
 		idStr := params["id"] // gettng the param
 
-		dummyName := r.URL.Query().Get("dummyName") // reading value from Query Params
-		fmt.Println(dummyName, "----")
+		// dummyName := r.URL.Query().Get("dummyName") // reading value from Query Params
+		// fmt.Println(dummyName, "----")
 
 		id, err := strconv.Atoi(idStr) // converting into int from string
 		if err != nil {
@@ -143,7 +136,8 @@ func main() {
 
 		var updatedTodo Todo
 
-		if err := json.NewDecoder(r.Body).Decode(&updatedTodo); err != nil {
+		eerr := json.NewDecoder(r.Body).Decode(&updatedTodo)
+		if eerr != nil {
 			http.Error(w, "Invalid JSON body", http.StatusBadRequest)
 			return
 		}
@@ -152,6 +146,10 @@ func main() {
 			if todo.ID == id {
 
 				updatedTodo.ID = id
+				// todos[index].Name = updatedTodo.Name
+				// todos[index].Task = updatedTodo.Task
+				// todos[index].Status.Completed = updatedTodo.Status.Completed
+				// todos[index].Status.Pending = updatedTodo.Status.Pending
 				todos[index] = updatedTodo
 
 				json.NewEncoder(w).Encode(map[string]any{
